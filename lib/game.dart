@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:sudoku_api/sudoku_api.dart';
 import 'inner_grid.dart';
+import 'package:sudoku_api/src/Puzzle.dart';
 
 class Game extends StatefulWidget {
   const Game({Key? key, required this.title}) : super(key: key);
@@ -21,7 +23,8 @@ class Game extends StatefulWidget {
 
 class _GameState extends State<Game> {
   int _counter = 0;
-
+  late Puzzle _puzzle;
+  late Future<void> _generateFuture;
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -31,6 +34,15 @@ class _GameState extends State<Game> {
       // called again, and so nothing would appear to happen.
       _counter++;
     });
+  }
+
+  @override
+  void initState(){
+    super.initState();
+   
+   PuzzleOptions options = PuzzleOptions(patternName: 'winter');
+   _puzzle = Puzzle(options);
+   _generateFuture = _puzzle.generate();
   }
 
   @override
@@ -69,21 +81,37 @@ class _GameState extends State<Game> {
             const Text(
               'You have pushed the button this many times:',
             ),
-            SizedBox(
-              height: boxSize * 3, 
-              width: boxSize *3,
-              child: GridView.count(
-                crossAxisCount: 3,
-                children: 
-                  List.generate(9, (x) {
-                    return Container(
-                      width: boxSize,
-                      height: boxSize,
-                      decoration: BoxDecoration(border: Border.all(color: Colors.blueAccent)),
-                      child: InnerGrid(size: boxSize),
-                    );
-                  })
-              )
+            FutureBuilder<void>(
+              future: _generateFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+
+                if (snapshot.hasError) {
+                  return const Text("Erreur lors de la génération");
+                }
+
+                return SizedBox(
+                  height: boxSize * 3,
+                  width: boxSize * 3,
+                  child: GridView.count(
+                    crossAxisCount: 3,
+                    children: List.generate(9, (blockIndex) {
+                      return Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.blueAccent),
+                        ),
+                        child: InnerGrid(
+                          size: boxSize,
+                          puzzle: _puzzle,
+                          blockIndex: blockIndex,
+                        ),
+                      );
+                    }),
+                  ),
+                );
+              },
             ),
             Text(
               '$_counter',
