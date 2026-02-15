@@ -23,6 +23,9 @@ class Game extends StatefulWidget {
 
 class _GameState extends State<Game> {
   int _counter = 0;
+  int? _selectedRow;
+  int? _selectedCol;
+
   late Puzzle _puzzle;
   late Future<void> _generateFuture;
   void _incrementCounter() {
@@ -106,6 +109,14 @@ class _GameState extends State<Game> {
                           size: boxSize,
                           puzzle: _puzzle,
                           blockIndex: blockIndex,
+                          selectedRow: _selectedRow,
+                          selectedCol: _selectedCol,
+                          onCellTap: (row, col) {
+                            setState(() {
+                              _selectedRow = row;
+                              _selectedCol = col;
+                            });
+                          },
                         ),
                       );
                     }),
